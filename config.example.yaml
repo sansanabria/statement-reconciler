@@ -1,0 +1,72 @@
+# statement-reconciler configuration
+#
+# Copy this to config.yaml and edit. config.yaml is gitignored, because it names your real
+# mail folders and your real column headers. This example file names nothing real.
+#
+# Everything the tool knows about your documents lives here. The code has no sender names,
+# no column names and no folder names in it.
+
+# Where fetched attachments are filed, and where `inventory` looks.
+output_root: "~/Statements"
+
+# How a run folder is named, relative to output_root. {source} is the source name below and
+# {date} is a Python date, so any strftime code works: {date:%Y.%m.%d}, {date:%Y-%W}, ...
+folder_template: "{source}/{source} {date:%Y.%m.%d}"
+
+# Outlook folders to search, as backslash- or slash-separated paths from the mailbox root.
+# Leave empty to search the default Inbox.
+mail_folders:
+  - "Inbox"
+  # - "Inbox/Statements"
+  # - "Archive/Statements"
+
+# Attachments smaller than this are skipped -- signature logos and tracking pixels arrive as
+# attachments too. Files with a data_extensions suffix are kept regardless of size.
+min_attachment_bytes: 8192
+
+# Suffixes treated as the spreadsheet side of a run folder. Everything else that is not a PDF
+# is saved but ignored by `check`.
+data_extensions: [".csv", ".xlsx", ".xlsm", ".ods", ".tsv"]
+
+sources:
+  # One entry per party that sends you statements. Duplicate the block and edit.
+  - name: EXAMPLE_SOURCE
+
+    # How to recognise the mail. A message matches if EVERY fragment in subject_all appears in
+    # the subject, OR ANY fragment in attachment_contains appears in an attachment filename.
+    # The attachment route catches forwards, which keep the file but lose the subject wording.
+    # Matching is case-insensitive.
+    match:
+      subject_all: ["Daily", "Statement"]
+      attachment_contains: ["daily_statement"]
+
+    # How to read the PDF. The tool reads word positions, never a flat text dump -- a text dump
+    # collapses empty columns and silently shifts values into the wrong field.
+    document:
+      # Only lines between a start marker and a stop marker are read as records. Leave both
+      # empty to read every line on every page.
+      start_markers: ["TRANSACTION DETAIL"]
+      stop_markers: ["END OF REPORT"]
+      # Lines containing any of these are skipped even inside the section (page furniture).
+      skip_markers: ["Page ", "Continued"]
+      # Where each column starts, in PDF points from the left edge. Run
+      #   reconcile probe <file.pdf>
+      # to print the word positions of a page and read these numbers off it.
+      columns:
+        date: 42
+        description: 110
+        quantity: 300
+        amount: 380
+
+    # How to read the spreadsheet. First column name that exists in the file wins; if none do,
+    # the error names the field, everything it tried, and the file's actual headers.
+    records:
+      date: ["Date", "Value Date", "Business Date"]
+      description: ["Description", "Details", "Narrative"]
+      quantity: ["Quantity", "Units", "Count"]
+      amount: ["Amount", "Value", "Total"]
+
+    # The two files share no record id, so a record is identified by a combination of fields.
+    # Every field named here must appear in BOTH document.columns and records above.
+    # Include enough fields that two genuinely different records never collide.
+    match_key: ["date", "description", "amount", "quantity"]
