@@ -177,19 +177,47 @@ class RecordSpec:
 
 @dataclass(frozen=True)
 class Source:
-    """One party that sends statements: how to recognise it, read it, and match its records."""
+    """One party that sends statements: how to recognise it, read it, and match its records.
+
+    Two ways to decide that a document record and a spreadsheet record are the same thing:
+
+    `match_on` names a single field carrying a shared identifier -- an invoice number, a
+    transaction reference. This is the normal case and the better one: records pair on the id,
+    and every other field is then COMPARED, so a wrong value is reported as that record's field
+    being wrong.
+
+    `match_key` is the fallback for documents that carry no identifier. Records are then
+    identified by a combination of fields, and a differing value cannot be reported as a
+    difference -- with nothing tying the two rows together, there is no way to know they were
+    meant to be the same record.
+
+    Exactly one of the two is configured.
+    """
 
     name: str
     mail: MailRule
     document: DocumentSpec
     records: RecordSpec
-    match_key: tuple[str, ...]
+    match_key: tuple[str, ...] = ()
+    match_on: str | None = None
+
+    @property
+    def compare_fields(self) -> tuple[str, ...]:
+        """Fields readable from both sides that are not the identifier itself.
+
+        Only meaningful with `match_on`: these are the fields checked for disagreement once two
+        records have been paired.
+        """
+        both = [f for f in KNOWN_FIELDS if f in self.records.aliases and f in self.document.columns]
+        return tuple(f for f in both if f != self.match_on)
 
     @staticmethod
     def from_dict(data: Any, index: int) -> Source:
         where = f"sources[{index}]"
         data = _require_mapping(data, where)
-        _reject_unknown(data, ("name", "match", "document", "records", "match_key"), where)
+        _reject_unknown(
+            data, ("name", "match", "document", "records", "match_key", "match_on"), where
+        )
 
         name = data.get("name")
         if not isinstance(name, str) or not name.strip():
@@ -198,29 +226,67 @@ class Source:
 
         document = DocumentSpec.from_dict(data.get("document"), f"{where}.document")
         records = RecordSpec.from_dict(data.get("records"), f"{where}.records")
+
+        match_on = data.get("match_on")
         match_key = _str_list(data.get("match_key"), f"{where}.match_key")
-        if not match_key:
+
+        if match_on is not None and match_key:
             raise ConfigError(
-                f"{where}.match_key: required. The two files share no record id, so records are "
-                f"matched on a composite key -- list the fields that together identify a record."
+                f"{where}: set match_on OR match_key, not both. match_on pairs records on a "
+                f"shared identifier; match_key is for documents that have none."
             )
+        if match_on is None and not match_key:
+            raise ConfigError(
+                f"{where}: set match_on or match_key. Use match_on with the field holding a "
+                f"shared identifier (an invoice or transaction reference). If the two files "
+                f"carry no identifier in common, use match_key to list the fields that together "
+                f"identify a record."
+            )
+
+        if match_on is not None:
+            if not isinstance(match_on, str) or not match_on.strip():
+                raise ConfigError(f"{where}.match_on: expected a field name")
+            match_on = match_on.strip()
+            _require_readable_from_both(match_on, "match_on", records, document, where)
+            source = Source(
+                name=name.strip(),
+                mail=MailRule.from_dict(data.get("match"), f"{where}.match"),
+                document=document,
+                records=records,
+                match_on=match_on,
+            )
+            if not source.compare_fields:
+                raise ConfigError(
+                    f"{where}: match_on is '{match_on}' but no other field is readable from both "
+                    f"sides, so there would be nothing to compare. Add at least one more field "
+                    f"to both records and document.columns."
+                )
+            return source
+
         for field_name in match_key:
-            if field_name not in records.aliases:
-                raise ConfigError(
-                    f"{where}.match_key names '{field_name}', but records.{field_name} has no "
-                    f"column names. Every match-key field must be readable from both sides."
-                )
-            if field_name not in document.columns:
-                raise ConfigError(
-                    f"{where}.match_key names '{field_name}', but document.columns has no "
-                    f"'{field_name}'. Every match-key field must be readable from both sides."
-                )
+            _require_readable_from_both(field_name, "match_key", records, document, where)
         return Source(
             name=name.strip(),
             mail=MailRule.from_dict(data.get("match"), f"{where}.match"),
             document=document,
             records=records,
             match_key=match_key,
+        )
+
+
+def _require_readable_from_both(
+    field_name: str, key: str, records: RecordSpec, document: DocumentSpec, where: str
+) -> None:
+    """A field used to pair records must be readable from both sides, or it can pair nothing."""
+    if field_name not in records.aliases:
+        raise ConfigError(
+            f"{where}.{key} names '{field_name}', but records.{field_name} has no column names. "
+            f"A field used to pair records must be readable from both sides."
+        )
+    if field_name not in document.columns:
+        raise ConfigError(
+            f"{where}.{key} names '{field_name}', but document.columns has no '{field_name}'. "
+            f"A field used to pair records must be readable from both sides."
         )
 
 

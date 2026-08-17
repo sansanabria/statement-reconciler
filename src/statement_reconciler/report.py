@@ -58,17 +58,28 @@ def _summary_sheet(sheet: Worksheet, result: Result, source_name: str, folder: P
     sheet.append(["Reconciliation summary"])
     sheet["A1"].font = Font(bold=True, size=14)
     sheet.append([])
+    paired_by = (
+        f"identifier: {result.match_on}"
+        if result.match_on
+        else f"composite key: {' + '.join(result.match_key)}"
+    )
     rows = [
         ("Source", source_name),
         ("Folder", str(folder)),
-        ("Match key", " + ".join(result.match_key)),
+        ("Records paired by", paired_by),
         ("", ""),
         ("Records in document", result.document_count),
         ("Records in spreadsheet", result.spreadsheet_count),
-        ("Matched", len(result.matched)),
+        ("Matched and agreeing", len(result.matched)),
+    ]
+    if result.match_on:
+        rows.append(("Matched but differing", len(result.differing)))
+    rows += [
         ("One-sided (unmatched)", len(result.unmatched)),
         ("Unread document lines", len(result.unread_lines)),
     ]
+    if result.ambiguous_ids:
+        rows.append(("Ambiguous identifiers", ", ".join(result.ambiguous_ids)))
     for name in ("amount", "quantity"):
         if name in result.match_key:
             doc_total, sheet_total = result.totals(name)
@@ -106,6 +117,37 @@ def _unmatched_sheet(workbook: Workbook, result: Result, fields: list[str]) -> N
     _autosize(sheet)
 
 
+def _differences_sheet(workbook: Workbook, result: Result) -> None:
+    """One row per disagreeing field, so the sheet is a worklist rather than a puzzle."""
+    sheet = workbook.create_sheet("Differences")
+    _write_header(
+        sheet,
+        [
+            result.match_on or "Identifier",
+            "Field",
+            "In document",
+            "In spreadsheet",
+            "Document at",
+            "Spreadsheet at",
+        ],
+    )
+    for pair in result.differing:
+        for difference in pair.differences:
+            sheet.append(
+                [
+                    pair.identifier,
+                    difference.field,
+                    difference.document_value,
+                    difference.spreadsheet_value,
+                    pair.document.locator,
+                    pair.spreadsheet.locator,
+                ]
+            )
+    for row in sheet.iter_rows(min_row=2, min_col=2, max_col=2):
+        row[0].fill = _BAD_FILL
+    _autosize(sheet)
+
+
 def _unread_sheet(workbook: Workbook, result: Result) -> None:
     sheet = workbook.create_sheet("Unread Lines")
     _write_header(sheet, ["Document line the reader could not interpret"])
@@ -134,6 +176,10 @@ def write_report(result: Result, out_path: str | Path, source_name: str, folder:
 
     workbook = Workbook()
     _summary_sheet(workbook.active, result, source_name, folder)
+    # Differences come first: a record that exists on both sides but disagrees is the most
+    # actionable finding, and only id mode can produce one.
+    if result.match_on:
+        _differences_sheet(workbook, result)
     _unmatched_sheet(workbook, result, fields)
     _unread_sheet(workbook, result)
     _matched_sheet(workbook, result, fields)

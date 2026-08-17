@@ -54,6 +54,44 @@ def test_invalid_config_names_the_offending_key(config_dict, mutate, expected):
         parse_config(broken)
 
 
+class TestMatchOn:
+    def test_id_mode_parses(self, id_config_dict):
+        source = parse_config(id_config_dict).sources[0]
+        assert source.match_on == "reference" and source.match_key == ()
+
+    def test_compare_fields_exclude_the_identifier(self, id_config_dict):
+        source = parse_config(id_config_dict).sources[0]
+        assert "reference" not in source.compare_fields
+        assert set(source.compare_fields) == {"date", "description", "quantity", "amount"}
+
+    def test_both_modes_at_once_is_rejected(self, id_config_dict):
+        id_config_dict["sources"][0]["match_key"] = ["date"]
+        with pytest.raises(ConfigError, match="not both"):
+            parse_config(id_config_dict)
+
+    def test_neither_mode_is_rejected(self, config_dict):
+        config_dict["sources"][0].pop("match_key")
+        with pytest.raises(ConfigError, match="set match_on or match_key"):
+            parse_config(config_dict)
+
+    def test_identifier_must_be_readable_from_both_sides(self, id_config_dict):
+        id_config_dict["sources"][0]["document"]["columns"].pop("reference")
+        with pytest.raises(ConfigError, match="match_on names 'reference'"):
+            parse_config(id_config_dict)
+
+    def test_nothing_left_to_compare_is_rejected(self, id_config_dict):
+        source = id_config_dict["sources"][0]
+        source["document"]["columns"] = {"reference": 40}
+        source["records"] = {"reference": ["Reference"]}
+        with pytest.raises(ConfigError, match="nothing to compare"):
+            parse_config(id_config_dict)
+
+    def test_blank_match_on(self, id_config_dict):
+        id_config_dict["sources"][0]["match_on"] = "  "
+        with pytest.raises(ConfigError, match="expected a field name"):
+            parse_config(id_config_dict)
+
+
 def test_duplicate_source_names_rejected(config_dict):
     config_dict["sources"].append(copy.deepcopy(config_dict["sources"][0]))
     with pytest.raises(ConfigError, match="duplicate source name"):

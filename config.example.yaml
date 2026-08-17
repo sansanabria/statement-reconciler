@@ -53,20 +53,34 @@ sources:
       #   reconcile probe <file.pdf>
       # to print the word positions of a page and read these numbers off it.
       columns:
-        date: 42
-        description: 110
-        quantity: 300
-        amount: 380
+        reference: 42
+        date: 110
+        description: 190
+        quantity: 340
+        amount: 400
 
     # How to read the spreadsheet. First column name that exists in the file wins; if none do,
     # the error names the field, everything it tried, and the file's actual headers.
     records:
+      reference: ["Reference", "Ref", "Invoice No", "Transaction ID"]
       date: ["Date", "Value Date", "Business Date"]
       description: ["Description", "Details", "Narrative"]
       quantity: ["Quantity", "Units", "Count"]
       amount: ["Amount", "Value", "Total"]
 
-    # The two files share no record id, so a record is identified by a combination of fields.
-    # Every field named here must appear in BOTH document.columns and records above.
-    # Include enough fields that two genuinely different records never collide.
-    match_key: ["date", "description", "amount", "quantity"]
+    # HOW RECORDS ARE PAIRED. Set exactly one of match_on or match_key.
+    #
+    # match_on -- use this when both files carry the same identifier (an invoice number, a
+    # transaction reference). Records pair on it and every other field is then compared, so a
+    # wrong value is reported as "INV-4471: amount is X here and Y there". This is the better
+    # mode; prefer it whenever an identifier exists.
+    match_on: reference
+    #
+    # match_key -- the fallback for documents with no identifier at all. A record is then
+    # recognised only by a combination of its own values, so list enough fields that two
+    # genuinely different records never collide. In this mode a record whose amount differs
+    # appears as two one-sided rows, not as one difference: with nothing tying the rows
+    # together, calling them the same record would be a guess.
+    # match_key: ["date", "description", "amount", "quantity"]
+    #
+    # Either way, every field used for pairing must appear in BOTH document.columns and records.

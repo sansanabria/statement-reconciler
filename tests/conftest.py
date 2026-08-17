@@ -61,7 +61,68 @@ def source(config):
     return config.sources[0]
 
 
-def _write_pdf(path: Path, rows: list[tuple[str, str, str, str]]) -> None:
+# --- id mode: the same documents, but carrying a reference on both sides -------------------
+
+ID_COLUMN_X = {
+    "reference": 40.0,
+    "date": 110.0,
+    "description": 190.0,
+    "quantity": 340.0,
+    "amount": 400.0,
+}
+
+ID_ROWS = [
+    ("INV-001", "2026-03-02", "ALPHA WIDGET", "10", "1,234.50"),
+    ("INV-002", "2026-03-02", "BETA GADGET", "4", "99.00"),
+    ("INV-003", "2026-03-03", "GAMMA DEVICE", "25", "7,500.75"),
+]
+
+_ID_FIELDS = ("reference", "date", "description", "quantity", "amount")
+
+
+@pytest.fixture
+def id_config_dict(config_dict) -> dict:
+    source = config_dict["sources"][0]
+    source.pop("match_key")
+    source["match_on"] = "reference"
+    source["document"]["columns"] = dict(ID_COLUMN_X)
+    source["records"] = {
+        "reference": ["Reference", "Ref"],
+        "date": ["Date"],
+        "description": ["Description"],
+        "quantity": ["Quantity"],
+        "amount": ["Amount"],
+    }
+    return config_dict
+
+
+@pytest.fixture
+def id_config(id_config_dict, tmp_path):
+    id_config_dict["output_root"] = str(tmp_path)
+    return parse_config(id_config_dict)
+
+
+@pytest.fixture
+def make_id_run_folder(tmp_path):
+    """A run folder whose documents both carry a reference column."""
+
+    def _make(pdf_rows, xlsx_rows) -> Path:
+        folder = tmp_path / "EXAMPLE_SOURCE" / "EXAMPLE_SOURCE 2026.03.02"
+        folder.mkdir(parents=True, exist_ok=True)
+        _write_pdf(folder / "statement.pdf", pdf_rows, columns=ID_COLUMN_X, fields=_ID_FIELDS)
+        _write_xlsx(folder / "records.xlsx", xlsx_rows, headers=[f.title() for f in _ID_FIELDS])
+        return folder
+
+    return _make
+
+
+def _write_pdf(
+    path: Path,
+    rows,
+    columns=None,
+    fields=("date", "description", "quantity", "amount"),
+) -> None:
+    columns = COLUMN_X if columns is None else columns
     reportlab = pytest.importorskip("reportlab", reason="reportlab builds the synthetic PDF")
     assert reportlab
     from reportlab.lib.pagesizes import A4
@@ -71,21 +132,21 @@ def _write_pdf(path: Path, rows: list[tuple[str, str, str, str]]) -> None:
     page.setFont("Helvetica", 9)
     height = A4[1]
     y = height - 60
-    page.drawString(COLUMN_X["date"], y, "TRANSACTION DETAIL")
+    left = min(columns.values())
+    page.drawString(left, y, "TRANSACTION DETAIL")
     y -= 20
     for row in rows:
-        fields = ("date", "description", "quantity", "amount")
         for field_name, value in zip(fields, row, strict=True):
-            page.drawString(COLUMN_X[field_name], y, value)
+            page.drawString(columns[field_name], y, value)
         y -= 16
-    page.drawString(COLUMN_X["date"], y - 10, "END OF REPORT")
+    page.drawString(left, y - 10, "END OF REPORT")
     page.save()
 
 
-def _write_xlsx(path: Path, rows: list[tuple[str, str, str, str]]) -> None:
+def _write_xlsx(path: Path, rows, headers=("Date", "Description", "Quantity", "Amount")) -> None:
     workbook = Workbook()
     sheet = workbook.active
-    sheet.append(["Date", "Description", "Quantity", "Amount"])
+    sheet.append(list(headers))
     for row in rows:
         sheet.append(list(row))
     workbook.save(path)

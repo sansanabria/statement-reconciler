@@ -107,7 +107,11 @@ def _cmd_check(args: argparse.Namespace, config: Config) -> int:
     print(f"Document records:    {result.document_count}")
     print(f"Spreadsheet records: {result.spreadsheet_count}")
     print(f"Matched:             {len(result.matched)}")
+    if result.match_on:
+        print(f"Differing:           {len(result.differing)}")
     print(f"One-sided:           {len(result.unmatched)}")
+    if result.ambiguous_ids:
+        print(f"Ambiguous ids:       {', '.join(result.ambiguous_ids)}")
     print(f"Unread lines:        {len(result.unread_lines)}")
     print(f"Verdict:             {result.verdict}")
     if out_path:

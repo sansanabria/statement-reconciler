@@ -11,7 +11,7 @@ from statement_reconciler.cli import main
 from statement_reconciler.config import ConfigError
 from statement_reconciler.inventory import scan
 
-from .conftest import ROWS
+from .conftest import ID_ROWS, ROWS
 
 pytestmark = pytest.mark.integration
 
@@ -85,7 +85,7 @@ class TestReport:
         sheet = load_workbook(out_path)["Summary"]
         cells = [(row[0].value, row[1].value) for row in sheet.iter_rows(max_col=2)]
         assert ("Verdict", "FULLY RECONCILED") in cells
-        assert ("Matched", 3) in cells
+        assert ("Matched and agreeing", 3) in cells
 
     def test_unmatched_sheet_says_which_side_is_missing_it(self, make_run_folder, config):
         folder = make_run_folder(ROWS, ROWS[:2])
@@ -99,6 +99,51 @@ class TestReport:
         _, out_path = check_folder(run_folder, config)
         sheet = load_workbook(out_path)["Matched"]
         assert sheet.max_row == 4  # header plus three pairs
+
+
+class TestCheckById:
+    def test_clean_folder_reconciles(self, make_id_run_folder, id_config):
+        folder = make_id_run_folder(ID_ROWS, ID_ROWS)
+        result, _ = check_folder(folder, id_config)
+        assert result.reconciled and result.match_on == "reference"
+
+    def test_a_wrong_amount_is_reported_as_one_record(self, make_id_run_folder, id_config):
+        """The composite-key path would give two one-sided rows here; the id path names it."""
+        altered = [(*ID_ROWS[0][:4], "1,243.50"), *ID_ROWS[1:]]
+        folder = make_id_run_folder(ID_ROWS, altered)
+        result, _ = check_folder(folder, id_config)
+        assert not result.unmatched
+        assert len(result.differing) == 1
+        pair = result.differing[0]
+        assert pair.identifier == "INV-001"
+        assert [d.field for d in pair.differences] == ["amount"]
+
+    def test_differences_sheet_is_a_worklist(self, make_id_run_folder, id_config):
+        altered = [(*ID_ROWS[0][:4], "1,243.50"), *ID_ROWS[1:]]
+        folder = make_id_run_folder(ID_ROWS, altered)
+        _, out_path = check_folder(folder, id_config)
+        book = load_workbook(out_path)
+        assert "Differences" in book.sheetnames
+        body = list(book["Differences"].iter_rows(min_row=2, values_only=True))
+        assert len(body) == 1
+        assert body[0][:4] == ("INV-001", "amount", "1,234.50", "1,243.50")
+
+    def test_composite_mode_has_no_differences_sheet(self, run_folder, config):
+        _, out_path = check_folder(run_folder, config)
+        assert "Differences" not in load_workbook(out_path).sheetnames
+
+    def test_missing_record_is_still_one_sided(self, make_id_run_folder, id_config):
+        folder = make_id_run_folder(ID_ROWS, ID_ROWS[:2])
+        result, _ = check_folder(folder, id_config)
+        assert not result.differing
+        assert [r.values["reference"] for r in result.unmatched] == ["INV-003"]
+
+    def test_summary_names_the_identifier(self, make_id_run_folder, id_config):
+        folder = make_id_run_folder(ID_ROWS, ID_ROWS)
+        _, out_path = check_folder(folder, id_config)
+        sheet = load_workbook(out_path)["Summary"]
+        cells = [(r[0].value, r[1].value) for r in sheet.iter_rows(max_col=2)]
+        assert ("Records paired by", "identifier: reference") in cells
 
 
 class TestInventory:

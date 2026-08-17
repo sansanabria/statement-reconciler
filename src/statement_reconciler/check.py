@@ -9,7 +9,7 @@ from .config import Config, ConfigError, Source
 from .documents.pdf import read_pdf
 from .documents.tabular import read_records
 from .mail.naming import is_data_file, is_document_file
-from .matching import Result, reconcile
+from .matching import Result, reconcile, reconcile_by_id
 from .report import write_report
 
 REPORT_NAME = "reconciliation_report.xlsx"
@@ -69,9 +69,19 @@ def check_folder(
 
     document_records, unread = read_pdf(files.document, source.document)
     spreadsheet_records = read_records(files.spreadsheet, source.records)
-    result = reconcile(
-        document_records, spreadsheet_records, source.match_key, unread_lines=tuple(unread)
-    )
+
+    if source.match_on:
+        result = reconcile_by_id(
+            document_records,
+            spreadsheet_records,
+            source.match_on,
+            source.compare_fields,
+            unread_lines=tuple(unread),
+        )
+    else:
+        result = reconcile(
+            document_records, spreadsheet_records, source.match_key, unread_lines=tuple(unread)
+        )
 
     out_path = None
     if write:
