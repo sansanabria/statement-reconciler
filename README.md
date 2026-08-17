@@ -11,13 +11,6 @@ missing what.
 Everything runs locally on your machine. Nothing is uploaded anywhere, and there is no AI in the
 parsing path -- the comparison is deterministic, so the same files always give the same answer.
 
-## What it is not
-
-There is nothing in this repository about any particular company, document layout or column
-name. It works on *your* documents once you describe them in a config file. That description is
-the whole setup: which mail to pick up, where to file it, where the PDF's columns sit, and what
-your spreadsheet calls each field.
-
 ## Install
 
 Requires Python 3.11+. Fetching mail additionally requires Windows with the **classic** Outlook
