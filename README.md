@@ -9,7 +9,7 @@ comparison and writes an Excel report saying what matched, what did not, and whi
 missing what.
 
 Everything runs locally on your machine. Nothing is uploaded anywhere, and there is no AI in the
-parsing path -- the comparison is deterministic, so the same files always give the same answer.
+
 
 ## Install
 
