@@ -1,0 +1,29 @@
+# Banking / Treasury example
+# Reconciles daily bank statement PDFs with exported cash/GL CSVs
+
+output_root: "~/Statements"
+folder_template: "{source}/{source} {date:%Y.%m.%d}"
+mail_folders:
+  - "Inbox/Bank Statements"
+min_attachment_bytes: 8192
+data_extensions: [".csv", ".xlsx", ".xlsm", ".tsv"]
+sources:
+  - name: BANK_X
+    match:
+      subject_all: ["Daily", "Bank", "Statement"]
+      attachment_contains: ["bank_statement", "balstmt"]
+    document:
+      start_markers: ["TRANSACTIONS", "TRANSACTION DETAIL"]
+      stop_markers: ["ENDING BALANCE", "END OF STATEMENT"]
+      skip_markers: ["Page ", "Continued"]
+      columns:
+        reference: 40
+        date: 110
+        description: 190
+        amount: 420
+    records:
+      reference: ["Reference", "Ref", "Transaction ID", "Txn ID"]
+      date: ["Date", "Value Date", "Transaction Date"]
+      description: ["Description", "Narrative", "Details"]
+      amount: ["Amount", "Value", "Debit/Credit", "Net"]
+    match_on: reference
