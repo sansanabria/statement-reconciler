@@ -107,3 +107,23 @@ def test_records_for_covers_both_matched_and_unmatched():
     result = reconcile([doc(), doc(desc="BETA")], [row()], KEY)
     assert len(result.records_for(DOCUMENT)) == 2
     assert len(result.records_for(SPREADSHEET)) == 1
+
+
+class TestRepeatedKeysAreReported:
+    """Repeats are legitimate, but a key that repeats a lot is too coarse to be trusted."""
+
+    def test_a_repeated_key_is_surfaced(self):
+        result = reconcile([doc(), doc()], [row(), row()], KEY)
+        assert result.repeated_keys
+        assert "x2" in result.repeated_keys[0]
+
+    def test_repeats_still_reconcile(self):
+        """Reporting them must not turn a legitimate repeat into a failure."""
+        assert reconcile([doc(), doc()], [row(), row()], KEY).reconciled
+
+    def test_unique_keys_report_nothing(self):
+        assert reconcile([doc()], [row()], KEY).repeated_keys == ()
+
+    def test_a_repeat_on_one_side_only_is_still_shown(self):
+        result = reconcile([doc(), doc()], [row()], KEY)
+        assert result.repeated_keys and not result.reconciled

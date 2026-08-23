@@ -68,6 +68,11 @@ class Result:
     ambiguous_ids: tuple[str, ...] = ()
     #: The field records were paired on, when pairing by identifier.
     match_on: str | None = None
+    #: Composite keys occurring more than once on a side. Informational, not a fault: the same
+    #: amount for the same thing genuinely repeats, and those repeats pair one-for-one. Worth
+    #: showing because a key that repeats a lot usually means it is too coarse to tell two
+    #: different records apart -- which is the one way composite matching can quietly mislead.
+    repeated_keys: tuple[str, ...] = ()
     #: Conditions that make the whole comparison untrustworthy rather than just unequal --
     #: chiefly "nothing could be read from the document at all". Two empty sides technically
     #: agree, and reporting that as reconciled is the worst possible failure: it is a silent
@@ -164,11 +169,17 @@ def reconcile(
     for leftovers in pending.values():
         unmatched.extend(leftovers)
 
+    repeated = duplicate_keys(document_records, match_key)
+    repeated.update(duplicate_keys(spreadsheet_records, match_key))
+
     return Result(
         match_key=match_key,
         matched=tuple(matched),
         unmatched=tuple(unmatched),
         unread_lines=tuple(unread_lines),
+        repeated_keys=tuple(
+            f"{' | '.join(key)} (x{count})" for key, count in sorted(repeated.items())
+        ),
     )
 
 

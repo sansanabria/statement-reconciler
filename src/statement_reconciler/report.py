@@ -85,6 +85,10 @@ def _summary_sheet(
     ]
     if result.ambiguous_ids:
         rows.append(("Ambiguous identifiers", ", ".join(result.ambiguous_ids)))
+    if result.repeated_keys:
+        # Informational: repeats pair one-for-one, but a key that repeats often is usually too
+        # coarse to tell two genuinely different records apart.
+        rows.append(("Repeated keys (for information)", len(result.repeated_keys)))
     for warning in result.warnings:
         rows.append(("WARNING", warning))
     for name in ("amount", "quantity"):

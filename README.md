@@ -1,11 +1,15 @@
-# statement-reconciler
+# Automated Financial Statement Reconciliation
 
-Compare a PDF statement against a spreadsheet of the same records, and get an Excel report of
-every place they disagree.
+Imagine receiving hundreds of financial statements by email and having to manually download,
+organize, and compare each one against another system's records. This tool takes over the entire
+process. It automatically pulls statement attachments from Outlook, organizes them into dated
+folders, extracts transaction data from PDFs, and compares it against the corresponding
+spreadsheet records. It then identifies matches, missing transactions, duplicates, and
+discrepancies, and produces an Excel reconciliation report showing exactly what needs attention
+— turning a slow, error-prone manual check into an automated control.
 
-It pulls both files out of Outlook, files them by date, reads them, and names each difference:
-the field, both values, and where to find it in each file. Neither side has to be yours — an
-external statement against your own export, or two files from two outside parties.
+Neither side has to be yours: an external statement against your own export is the common case,
+but two files from two outside parties reconcile the same way.
 
 Everything runs locally on your machine. Nothing is uploaded anywhere, and there is no AI in the
 parsing path -- the comparison is deterministic, so the same files always give the same answer.
