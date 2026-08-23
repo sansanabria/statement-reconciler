@@ -1,12 +1,19 @@
 # statement-reconciler
 
-Pull statement attachments out of Outlook, file them into dated folders on your computer, and
-cross-check the PDF statement against the spreadsheet that is supposed to say the same thing.
+**Two documents claim to describe the same money. This finds every place they disagree.**
 
-One party sends a PDF statement. A spreadsheet somewhere lists the same records -- your own
-system's export, or a second outside party's file. The two should agree, and checking them by
-eye is slow and easy to get wrong. This tool does the comparison and writes an Excel report
-saying what matched, what did not, and which side is missing what.
+A supplier bills you for a delivery nobody booked. Someone books a payment the supplier never
+billed. The two land within a few pounds of each other, so the totals still foot, the month
+closes clean, and the gap only surfaces a quarter later — when unpicking it means going back
+through four months of statements by hand.
+
+Reading line against line catches that on the day. It is also slow, repetitive work, and
+attention starts to drift somewhere around the fortieth row.
+
+So hand that pass over. Point this at a PDF statement and a spreadsheet listing the same records
+— your own export, or a second outside party's file, since neither side has to be yours — and it
+pulls both out of Outlook, files them into dated folders on your machine, and writes an Excel
+report: what matched, what disagrees and by how much, and which side is missing what.
 
 Everything runs locally on your machine. Nothing is uploaded anywhere, and there is no AI in the
 parsing path -- the comparison is deterministic, so the same files always give the same answer.
