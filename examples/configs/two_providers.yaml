@@ -1,0 +1,49 @@
+# Two outside parties, neither of them you.
+#
+# The usual setup compares an external statement against your own export. It does not have to:
+# both files can arrive from outside. A managing agent's rent statement against the letting
+# platform's payout file; a freight invoice against the carrier's manifest; a fund administrator's
+# valuation against the custodian's holdings.
+#
+# Nothing in the mechanics changes -- one side is a PDF, the other a spreadsheet, and they are
+# compared the same way. What changes is that "spreadsheet" is a meaningless name when it is not
+# yours, so `labels` names both sides and the report says which is which.
+
+output_root: "~/Statements"
+folder_template: "{source}/{source} {date:%Y.%m.%d}"
+mail_folders:
+  - "Inbox"
+
+sources:
+  - name: AGENT_VS_PLATFORM
+    # Both files land in the same run folder, from two different senders. Either sender's mail
+    # matches the source; fetch files whatever it finds into the same dated folder.
+    match:
+      attachment_contains: ["agent_statement", "platform_payout"]
+
+    # What the two sides are called everywhere in the report. Without these you would be reading
+    # "document" and "spreadsheet", which says nothing about who sent what.
+    labels:
+      document: "Managing agent statement"
+      spreadsheet: "Platform payout file"
+
+    # The PDF side -- the managing agent's statement.
+    document:
+      start_markers: ["RENT COLLECTED"]
+      stop_markers: ["TOTAL DUE"]
+      skip_markers: ["Page ", "Continued"]
+      columns:
+        reference: 40
+        date: 120
+        description: 200
+        amount: 420
+
+    # The spreadsheet side -- the platform's payout export. Also external.
+    records:
+      reference: ["Payment Reference", "Reference", "Payout ID"]
+      date: ["Date", "Payout Date", "Settled On"]
+      description: ["Property", "Description", "Unit"]
+      amount: ["Amount", "Net", "Paid"]
+
+    # Both parties quote the same payment reference, so pair on it and compare the rest.
+    match_on: reference

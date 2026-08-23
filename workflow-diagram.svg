@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 520" width="1180" height="520">
+  <defs>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+    <filter id="dotGlow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <rect width="1180" height="520" rx="16" fill="#1a1a2e"/>
+
+  <!-- ==================== CONNECTORS ==================== -->
+  <path id="c1" d="M 148,300 L 218,300" stroke="#555" stroke-width="1.8" fill="none"/>
+  <path id="c2" d="M 298,300 L 360,300" stroke="#555" stroke-width="1.8" fill="none"/>
+  <!-- the run folder splits into its two files -->
+  <path id="c3a" d="M 440,280 C 462,280 470,200 500,200" stroke="#555" stroke-width="1.8" fill="none"/>
+  <path id="c3b" d="M 440,320 C 462,320 470,400 500,400" stroke="#555" stroke-width="1.8" fill="none"/>
+  <!-- both sides meet at the match -->
+  <path id="c4a" d="M 580,200 C 620,200 640,300 680,300" stroke="#555" stroke-width="1.8" fill="none"/>
+  <path id="c4b" d="M 580,400 C 620,400 640,300 680,300" stroke="#555" stroke-width="1.8" fill="none"/>
+  <path id="c5" d="M 760,300 L 830,300" stroke="#555" stroke-width="1.8" fill="none"/>
+  <!-- the report fans out into the three findings -->
+  <path d="M 910,300 C 940,300 950,205 980,205" stroke="#555" stroke-width="1.6" fill="none"/>
+  <path d="M 910,300 L 980,300" stroke="#555" stroke-width="1.6" fill="none"/>
+  <path d="M 910,300 C 940,300 950,395 980,395" stroke="#555" stroke-width="1.6" fill="none"/>
+
+  <!-- flowing dots -->
+  <circle r="3.5" fill="#ff6d5a" filter="url(#dotGlow)">
+    <animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#c1"/></animateMotion>
+  </circle>
+  <circle r="3.5" fill="#ff6d5a" filter="url(#dotGlow)">
+    <animateMotion dur="1.2s" begin="0.3s" repeatCount="indefinite"><mpath href="#c2"/></animateMotion>
+  </circle>
+  <circle r="3.5" fill="#4facfe" filter="url(#dotGlow)">
+    <animateMotion dur="1.4s" begin="0.5s" repeatCount="indefinite"><mpath href="#c3a"/></animateMotion>
+  </circle>
+  <circle r="3.5" fill="#a78bfa" filter="url(#dotGlow)">
+    <animateMotion dur="1.4s" begin="0.5s" repeatCount="indefinite"><mpath href="#c3b"/></animateMotion>
+  </circle>
+  <circle r="3.5" fill="#4facfe" filter="url(#dotGlow)">
+    <animateMotion dur="1.4s" begin="0.9s" repeatCount="indefinite"><mpath href="#c4a"/></animateMotion>
+  </circle>
+  <circle r="3.5" fill="#a78bfa" filter="url(#dotGlow)">
+    <animateMotion dur="1.4s" begin="0.9s" repeatCount="indefinite"><mpath href="#c4b"/></animateMotion>
+  </circle>
+  <circle r="3.5" fill="#4cd964" filter="url(#dotGlow)">
+    <animateMotion dur="1.2s" begin="1.2s" repeatCount="indefinite"><mpath href="#c5"/></animateMotion>
+  </circle>
+
+  <!-- ==================== NODES ==================== -->
+
+  <!-- 1. Outlook (trigger) -->
+  <g filter="url(#shadow)">
+    <rect x="68" y="270" width="80" height="60" rx="10" fill="#2a2a3e" stroke="#444" stroke-width="1"/>
+    <rect x="68" y="270" width="4" height="60" rx="2" fill="#ff6d5a"/>
+    <g transform="translate(94, 286)">
+      <rect x="0" y="2" width="28" height="20" rx="3" fill="none" stroke="#ff6d5a" stroke-width="1.8"/>
+      <path d="M1,4 L14,14 L27,4" fill="none" stroke="#ff6d5a" stroke-width="1.6" stroke-linecap="round"/>
+    </g>
+  </g>
+  <text x="108" y="352" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="10" fill="#ccc" font-weight="600">Outlook</text>
+  <text x="108" y="364" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="10" fill="#ccc">matching mail</text>
+  <text x="108" y="378" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="9" fill="#666">no password</text>
+
+  <!-- 2. Dated folder -->
+  <g filter="url(#shadow)">
+    <rect x="218" y="270" width="80" height="60" rx="10" fill="#2a2a3e" stroke="#444" stroke-width="1"/>
+    <g transform="translate(244, 287)">
+      <path d="M0,4 A2,2 0 0 1 2,2 L10,2 L13,6 L26,6 A2,2 0 0 1 28,8 L28,22 A2,2 0 0 1 26,24 L2,24 A2,2 0 0 1 0,22 Z" fill="none" stroke="#f5a623" stroke-width="1.8" stroke-linejoin="round"/>
+    </g>
+  </g>
+  <text x="258" y="352" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="10" fill="#ccc" font-weight="600">Dated folder</text>
+  <text x="258" y="364" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="10" fill="#ccc">per source, per day</text>
+  <text x="258" y="378" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="9" fill="#666">on your own disk</text>
+
+  <!-- 3. The two files -->
+  <g filter="url(#shadow)">
+    <rect x="360" y="270" width="80" height="60" rx="10" fill="#2a2a3e" stroke="#444" stroke-width="1"/>
+    <text x="400" y="306" text-anchor="middle" font-family="Inter,sans-serif" font-size="13" fill="#888" font-weight="700">2 files</text>
+  </g>
+  <text x="400" y="352" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="10" fill="#ccc">the two sides</text>
+
+  <!-- 3a. PDF -->
+  <g filter="url(#shadow)">
+    <rect x="500" y="170" width="80" height="60" rx="10" fill="#2a2a3e" stroke="#444" stroke-width="1"/>
+    <g transform="translate(528, 185)">
+      <path d="M0,3 A2,2 0 0 1 2,1 L15,1 L24,10 L24,27 A2,2 0 0 1 22,29 L2,29 A2,2 0 0 1 0,27 Z" fill="none" stroke="#4facfe" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M15,1 L15,10 L24,10" fill="none" stroke="#4facfe" stroke-width="1.4"/>
+    </g>
+  </g>
+  <text x="540" y="248" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="10" fill="#ccc" font-weight="600">PDF statement</text>
+  <text x="540" y="260" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="10" fill="#ccc">read by word position</text>
+  <text x="540" y="274" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="9" fill="#666">never a flat text dump</text>
+
+  <!-- 3b. Spreadsheet -->
+  <g filter="url(#shadow)">
+    <rect x="500" y="370" width="80" height="60" rx="10" fill="#2a2a3e" stroke="#444" stroke-width="1"/>
+    <g transform="translate(528, 386)">
+      <rect x="0" y="0" width="24" height="28" rx="3" fill="none" stroke="#a78bfa" stroke-width="1.7"/>
+      <path d="M0,9 L24,9 M0,18 L24,18 M8,0 L8,28 M16,0 L16,28" stroke="#a78bfa" stroke-width="1.2" opacity="0.8"/>
+    </g>
+  </g>
+  <text x="540" y="448" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="10" fill="#ccc" font-weight="600">Spreadsheet</text>
+  <text x="540" y="460" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="10" fill="#ccc">xlsx / csv / ods</text>
+  <text x="540" y="474" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="9" fill="#666">columns by alias</text>
+
+  <!-- 4. Match -->
+  <g filter="url(#shadow)">
+    <rect x="680" y="270" width="80" height="60" rx="10" fill="#2a2a3e" stroke="#444" stroke-width="1"/>
+    <g transform="translate(706, 288)">
+      <circle cx="10" cy="12" r="9" fill="none" stroke="#4cd964" stroke-width="1.8"/>
+      <circle cx="18" cy="12" r="9" fill="none" stroke="#4cd964" stroke-width="1.8" opacity="0.75"/>
+    </g>
+  </g>
+  <text x="720" y="352" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="10" fill="#ccc" font-weight="600">Match</text>
+  <text x="720" y="364" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="10" fill="#ccc">shared reference,</text>
+  <text x="720" y="376" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="10" fill="#ccc">or composite key</text>
+
+  <!-- 5. Excel report -->
+  <g filter="url(#shadow)">
+    <rect x="830" y="270" width="80" height="60" rx="10" fill="#2a2a3e" stroke="#444" stroke-width="1"/>
+    <g transform="translate(858, 286)">
+      <rect x="0" y="0" width="24" height="28" rx="3" fill="none" stroke="#ff6d5a" stroke-width="1.7"/>
+      <path d="M5,21 L5,13 M11,21 L11,8 M17,21 L17,16" stroke="#ff6d5a" stroke-width="2" stroke-linecap="round"/>
+    </g>
+  </g>
+  <text x="870" y="352" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="10" fill="#ccc" font-weight="600">Excel report</text>
+  <text x="870" y="364" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="10" fill="#ccc">one per folder</text>
+
+  <!-- 6. Findings -->
+  <g filter="url(#shadow)">
+    <rect x="980" y="182" width="132" height="46" rx="10" fill="#2a2a3e" stroke="#444" stroke-width="1"/>
+    <rect x="980" y="182" width="4" height="46" rx="2" fill="#4cd964"/>
+  </g>
+  <text x="1050" y="203" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="10" fill="#ccc" font-weight="600">Agrees</text>
+  <text x="1050" y="217" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="9" fill="#666">matched</text>
+
+  <g filter="url(#shadow)">
+    <rect x="980" y="277" width="132" height="46" rx="10" fill="#2a2a3e" stroke="#444" stroke-width="1"/>
+    <rect x="980" y="277" width="4" height="46" rx="2" fill="#ff6d5a"/>
+  </g>
+  <text x="1050" y="298" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="10" fill="#ccc" font-weight="600">Differs</text>
+  <text x="1050" y="312" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="9" fill="#666">field and both values</text>
+
+  <g filter="url(#shadow)">
+    <rect x="980" y="372" width="132" height="46" rx="10" fill="#2a2a3e" stroke="#444" stroke-width="1"/>
+    <rect x="980" y="372" width="4" height="46" rx="2" fill="#f5a623"/>
+  </g>
+  <text x="1050" y="393" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="10" fill="#ccc" font-weight="600">One-sided</text>
+  <text x="1050" y="407" text-anchor="middle" font-family="Inter,'Segoe UI',sans-serif" font-size="9" fill="#666">missing a side</text>
+
+  <text x="68" y="472" font-family="Inter,'Segoe UI',sans-serif" font-size="10" fill="#666">Everything runs locally &#183; deterministic &#183; no AI in the parsing path</text>
+</svg>

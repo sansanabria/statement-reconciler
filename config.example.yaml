@@ -1,0 +1,100 @@
+# statement-reconciler configuration
+#
+# Copy this to config.yaml and edit. config.yaml is gitignored, because it names your real
+# mail folders and your real column headers. This example file names nothing real.
+#
+# Everything the tool knows about your documents lives here. The code has no sender names,
+# no column names and no folder names in it.
+
+# Where fetched attachments are filed, and where `inventory` looks.
+output_root: "~/Statements"
+
+# How a run folder is named, relative to output_root. {source} is the source name below and
+# {date} is a Python date, so any strftime code works: {date:%Y.%m.%d}, {date:%Y-%W}, ...
+folder_template: "{source}/{source} {date:%Y.%m.%d}"
+
+# Outlook folders to search, as backslash- or slash-separated paths from the mailbox root.
+# Leave empty to search the default Inbox.
+mail_folders:
+  - "Inbox"
+  # - "Inbox/Statements"
+  # - "Archive/Statements"
+
+# Attachments smaller than this are skipped -- signature logos and tracking pixels arrive as
+# attachments too. Files with a data_extensions suffix are kept regardless of size.
+min_attachment_bytes: 8192
+
+# Suffixes treated as the spreadsheet side of a run folder. Everything else that is not a PDF
+# is saved but ignored by `check`.
+data_extensions: [".csv", ".xlsx", ".xlsm", ".ods", ".tsv"]
+
+sources:
+  # One entry per party that sends you statements. Duplicate the block and edit.
+  - name: EXAMPLE_SOURCE
+
+    # How to recognise the mail. A message matches if EVERY fragment in subject_all appears in
+    # the subject, OR ANY fragment in attachment_contains appears in an attachment filename.
+    # The attachment route catches forwards, which keep the file but lose the subject wording.
+    # Matching is case-insensitive.
+    match:
+      subject_all: ["Daily", "Statement"]
+      attachment_contains: ["daily_statement"]
+
+    # What the two sides are called in the report. Optional -- without it they are called
+    # "document" and "spreadsheet", which is fine when the spreadsheet is your own export. Set
+    # them when BOTH files come from outside, so the report names the parties instead of the
+    # file formats. Purely presentational; the reconciliation is identical either way.
+    # labels:
+    #   document: "Managing agent statement"
+    #   spreadsheet: "Platform payout file"
+
+    # How this sender writes a purely numeric date. Nothing in the document says whether
+    # 03/04/2026 is 3 April or 4 March, so declare it: day_first (default) or month_first.
+    # Only affects ambiguous numeric forms -- ISO and spelled-out months are read the same way
+    # whatever this says.
+    date_order: day_first
+
+    # How to read the PDF. The tool reads word positions, never a flat text dump -- a text dump
+    # collapses empty columns and silently shifts values into the wrong field.
+    document:
+      # Only lines between a start marker and a stop marker are read as records. Leave both
+      # empty to read every line on every page.
+      start_markers: ["TRANSACTION DETAIL"]
+      stop_markers: ["END OF REPORT"]
+      # Lines containing any of these are skipped even inside the section (page furniture).
+      skip_markers: ["Page ", "Continued"]
+      # Where each column starts, in PDF points from the left edge. Run
+      #   reconcile probe <file.pdf>
+      # to print the word positions of a page and read these numbers off it.
+      columns:
+        reference: 42
+        date: 110
+        description: 190
+        quantity: 340
+        amount: 400
+
+    # How to read the spreadsheet. First column name that exists in the file wins; if none do,
+    # the error names the field, everything it tried, and the file's actual headers.
+    records:
+      reference: ["Reference", "Ref", "Invoice No", "Transaction ID"]
+      date: ["Date", "Value Date", "Business Date"]
+      description: ["Description", "Details", "Narrative"]
+      quantity: ["Quantity", "Units", "Count"]
+      amount: ["Amount", "Value", "Total"]
+
+    # HOW RECORDS ARE PAIRED. Set exactly one of match_on or match_key.
+    #
+    # match_on -- use this when both files carry the same identifier (an invoice number, a
+    # transaction reference). Records pair on it and every other field is then compared, so a
+    # wrong value is reported as "INV-4471: amount is X here and Y there". This is the better
+    # mode; prefer it whenever an identifier exists.
+    match_on: reference
+    #
+    # match_key -- the fallback for documents with no identifier at all. A record is then
+    # recognised only by a combination of its own values, so list enough fields that two
+    # genuinely different records never collide. In this mode a record whose amount differs
+    # appears as two one-sided rows, not as one difference: with nothing tying the rows
+    # together, calling them the same record would be a guess.
+    # match_key: ["date", "description", "amount", "quantity"]
+    #
+    # Either way, every field used for pairing must appear in BOTH document.columns and records.
