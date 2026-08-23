@@ -1,19 +1,11 @@
 # statement-reconciler
 
-**Two documents claim to describe the same money. This finds every place they disagree.**
+Compare a PDF statement against a spreadsheet of the same records, and get an Excel report of
+every place they disagree.
 
-A supplier bills you for a delivery nobody booked. Someone books a payment the supplier never
-billed. The two land within a few pounds of each other, so the totals still foot, the month
-closes clean, and the gap only surfaces a quarter later — when unpicking it means going back
-through four months of statements by hand.
-
-Reading line against line catches that on the day. It is also slow, repetitive work, and
-attention starts to drift somewhere around the fortieth row.
-
-So hand that pass over. Point this at a PDF statement and a spreadsheet listing the same records
-— your own export, or a second outside party's file, since neither side has to be yours — and it
-pulls both out of Outlook, files them into dated folders on your machine, and writes an Excel
-report: what matched, what disagrees and by how much, and which side is missing what.
+It pulls both files out of Outlook, files them by date, reads them, and names each difference:
+the field, both values, and where to find it in each file. Neither side has to be yours — an
+external statement against your own export, or two files from two outside parties.
 
 Everything runs locally on your machine. Nothing is uploaded anywhere, and there is no AI in the
 parsing path -- the comparison is deterministic, so the same files always give the same answer.
